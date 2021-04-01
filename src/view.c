@@ -95,7 +95,7 @@ void renderInit() {
   char *vertexShader = malloc(vertexShaderLength + 1);
   fread(vertexShader, 1, vertexShaderLength, vertexShaderFile);
 
-  vertexShader[vertexShaderLength - 1] = 0;
+  vertexShader[vertexShaderLength] = 0;
 
   fclose(vertexShaderFile);
 
@@ -120,7 +120,7 @@ void renderInit() {
   char *fragShader = malloc(fragShaderLength + 1);
   fread(fragShader, 1, fragShaderLength, fragShaderFile);
 
-  fragShader[fragShaderLength - 1] = 0;
+  fragShader[fragShaderLength] = 0;
 
   fclose(fragShaderFile);
 
