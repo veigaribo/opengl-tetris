@@ -10,6 +10,7 @@ SOURCES=$(notdir $(wildcard $(SRCDIR)/*.c))
 OBJS=$(patsubst %.c,%.o,$(SOURCES))
 
 $(ODIR)/%.o: $(SRCDIR)/%.c
+	mkdir -p $(ODIR)
 	$(CC) -c -o $@ $(CFLAGS) $(CUSTOMCFLAGS) $<
 
 tetris: $(addprefix $(ODIR)/,$(OBJS))
