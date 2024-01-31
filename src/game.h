@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GAME_H
+#define GAME_H
 
 #include "common.h"
 #include "field.h"
@@ -34,3 +35,5 @@ struct GameState {
 struct GameState *start(GLFWwindow *window);
 void update(struct GameState *game, double dt);
 void end(struct GameState *game);
+
+#endif /* GAME_H */

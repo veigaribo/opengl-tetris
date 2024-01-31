@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FIELD_H
+#define FIELD_H
 
 #define FIELD_WIDTH 12
 #define FIELD_HEIGHT 18
@@ -16,3 +17,5 @@ struct Tile {
 };
 
 unsigned int to1D(int x, int y);
+
+#endif /* FIELD_H */

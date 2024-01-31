@@ -92,19 +92,21 @@ void renderInit() {
   fseek(vertexShaderFile, 0, SEEK_SET);
 
   // + 1 for null at the end
-  char *vertexShader = malloc(vertexShaderLength + 1);
-  fread(vertexShader, 1, vertexShaderLength, vertexShaderFile);
+  // vertexShader1 is not `const`, vertexShader is
+  char *const vertexShader1 = malloc(vertexShaderLength + 1);
+  fread(vertexShader1, 1, vertexShaderLength, vertexShaderFile);
 
-  vertexShader[vertexShaderLength] = 0;
+  vertexShader1[vertexShaderLength] = 0;
 
   fclose(vertexShaderFile);
+  const char *const vertexShader = vertexShader1;
 
   unsigned int vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
 
   glShaderSource(vertexShaderId, 1, &vertexShader, NULL);
   glCompileShader(vertexShaderId);
 
-  free(vertexShader);
+  free(vertexShader1);
 
   glAttachShader(programId, vertexShaderId);
   glDeleteShader(vertexShaderId);
@@ -117,19 +119,21 @@ void renderInit() {
   fseek(fragShaderFile, 0, SEEK_SET);
 
   // + 1 for null at the end
-  char *fragShader = malloc(fragShaderLength + 1);
-  fread(fragShader, 1, fragShaderLength, fragShaderFile);
+  // fragShader1 is not `const`, fragShader is
+  char *const fragShader1 = malloc(fragShaderLength + 1);
+  fread(fragShader1, 1, fragShaderLength, fragShaderFile);
 
-  fragShader[fragShaderLength] = 0;
+  fragShader1[fragShaderLength] = 0;
 
   fclose(fragShaderFile);
+  const char *const fragShader = fragShader1;
 
   unsigned int fragShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 
   glShaderSource(fragShaderId, 1, &fragShader, NULL);
   glCompileShader(fragShaderId);
 
-  free(fragShader);
+  free(fragShader1);
 
   glAttachShader(programId, fragShaderId);
   glDeleteShader(fragShaderId);

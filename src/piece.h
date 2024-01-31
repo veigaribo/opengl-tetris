@@ -1,4 +1,5 @@
-#pragma once
+#ifndef PIECE_H
+#define PIECE_H
 
 #include "common.h"
 
@@ -22,3 +23,5 @@ extern struct PieceTemplate PIECE_O, PIECE_L, PIECE_J, PIECE_I, PIECE_S,
 
 // https://youtu.be/8OK8_tHeCIA?t=209
 unsigned int rotatedIndex(unsigned int px, unsigned int py, unsigned int r);
+
+#endif /* PIECE_H */
