@@ -3,12 +3,16 @@
 // clang-format on
 
 #include "game.h"
+#include "piece.h"
 #include "stdio.h"
 #include "view.h"
-#include "piece.h"
+#include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include <time.h>
-#include <GLFW/glfw3.h>
+
+#ifdef TRACK_FPS
+#include "fps.h"
+#endif
 
 int main() {
   GLFWwindow *window;
@@ -33,7 +37,11 @@ int main() {
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 
+#ifdef TRACK_FPS
+  glfwSwapInterval(0);
+#else
   glfwSwapInterval(1);
+#endif
 
   glewInit();
 
@@ -50,6 +58,10 @@ int main() {
 
   float dt;
 
+#ifdef TRACK_FPS
+  float fps = 0;
+#endif
+
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
     endTime = glfwGetTime();
@@ -58,9 +70,15 @@ int main() {
 
     update(game, dt);
 
+    render(game);
+
     startTime = glfwGetTime();
 
-    render(game);
+#ifdef TRACK_FPS
+    if (trackFps(&fps, dt)) {
+      printf("FPS: %02.0f\n", fps);
+    }
+#endif
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
