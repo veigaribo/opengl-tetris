@@ -3,6 +3,7 @@
 // clang-format on
 
 #include "game.h"
+#include "input.h"
 #include "piece.h"
 #include "stdio.h"
 #include "view.h"
@@ -37,6 +38,8 @@ int main() {
   }
 
   glfwSetInputMode(window, GLFW_STICKY_KEYS, GLFW_TRUE);
+  glfwSetKeyCallback(window, keyCallback);
+
   /* Make the window's context current */
   glfwMakeContextCurrent(window);
 

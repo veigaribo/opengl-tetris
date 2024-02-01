@@ -9,11 +9,6 @@
 struct GameState {
   GLFWwindow *window;
 
-  bool holdingLeft;
-  bool holdingRight;
-  bool holdingDown;
-  bool holdingRotate;
-
   struct Tile field[FIELD_WIDTH * FIELD_HEIGHT];
 
   bool gameOver;
@@ -22,14 +17,10 @@ struct GameState {
 
   unsigned int pieceCount;
 
-  float speed;
+  float forceDownInterval;
   float speedCounter;
 
-  bool forceDown;
-
   unsigned int score;
-
-  int linesToClean[4];
 };
 
 void start(GLFWwindow *window, struct GameState *game);

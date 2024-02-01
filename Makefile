@@ -13,6 +13,8 @@ endif
 # Use `DEBUG=1` in the invocation of `make` to enable
 ifdef DEBUG
 	CUSTOMCFLAGS := $(CUSTOMCFLAGS) -g
+else
+	CUSTOMCFLAGS := $(CUSTOMCFLAGS) -O3
 endif
 
 SRCDIR=src

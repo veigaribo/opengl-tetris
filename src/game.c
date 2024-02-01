@@ -1,6 +1,7 @@
 #include "game.h"
 #include "config.h"
 #include "field.h"
+#include "input.h"
 #include "piece.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -111,14 +112,9 @@ void start(GLFWwindow *window, struct GameState *game) {
   game->window = window;
   game->gameOver = false;
   game->pieceCount = 0;
-  game->speed = INITIAL_SPEED;
+  game->forceDownInterval = INITIAL_DOWN_INTERVAL;
   game->speedCounter = 0;
-  game->forceDown = false;
   game->score = 0;
-  game->linesToClean[0] = -1;
-  game->linesToClean[1] = -1;
-  game->linesToClean[2] = -1;
-  game->linesToClean[3] = -1;
 
   for (int i = 0; i < FIELD_WIDTH * FIELD_HEIGHT; i++) {
     game->field[i].value = TILE_FREE;
@@ -128,70 +124,77 @@ void start(GLFWwindow *window, struct GameState *game) {
   fillActivePiece(game);
 }
 
+unsigned int linesToClean[4];
+bool forceDown;
+
 void update(struct GameState *game, double dt) {
   if (game->gameOver) {
     return;
   }
 
   GLFWwindow *window = game->window;
-  int leftInputState = glfwGetKey(window, GLFW_KEY_A);
-  int rightInputState = glfwGetKey(window, GLFW_KEY_D);
-  int downInputState = glfwGetKey(window, GLFW_KEY_S);
-  int rotateInputState = glfwGetKey(window, GLFW_KEY_Z);
+  enum Input input = getInput(window);
 
-  bool userMoved =
-      leftInputState || rightInputState || downInputState || rotateInputState;
+  bool userMoved = input != INPUT_NONE;
 
   struct ActivePiece currentPiece = game->currentPiece;
 
-  if (!game->holdingLeft && leftInputState &&
-      doesPieceFit(game, currentPiece.x - 1, currentPiece.y,
-                   currentPiece.rotation)) {
-    game->currentPiece.x--;
-  }
+  switch (input) {
+  case INPUT_LEFT:
+    if (doesPieceFit(game, currentPiece.x - 1, currentPiece.y,
+                     currentPiece.rotation)) {
+      game->currentPiece.x--;
 
-  if (!game->holdingRight && rightInputState &&
-      doesPieceFit(game, currentPiece.x + 1, currentPiece.y,
-                   currentPiece.rotation)) {
-    game->currentPiece.x++;
-  }
+      clearCurrentPiece(game);
+      fillActivePiece(game);
+    }
+    break;
+  case INPUT_RIGHT:
+    if (doesPieceFit(game, currentPiece.x + 1, currentPiece.y,
+                     currentPiece.rotation)) {
+      game->currentPiece.x++;
 
-  if (!game->holdingDown && downInputState &&
-      doesPieceFit(game, currentPiece.x, currentPiece.y - 1,
-                   currentPiece.rotation)) {
-    game->currentPiece.y--;
-  }
-
-  if (!game->holdingRotate && rotateInputState &&
-      doesPieceFit(game, currentPiece.x, currentPiece.y,
-                   currentPiece.rotation + 1)) {
-    game->currentPiece.rotation++;
-  }
-
-  if (userMoved) {
-    clearCurrentPiece(game);
-    fillActivePiece(game);
-  }
-
-  game->holdingLeft = leftInputState;
-  game->holdingRight = rightInputState;
-  game->holdingDown = downInputState;
-  game->holdingRotate = rotateInputState;
-
-  game->speedCounter += dt;
-
-  if (game->speedCounter > game->speed) {
-    game->speedCounter -= game->speed;
-
-    game->forceDown = true;
-  }
-
-  if (game->forceDown) {
+      clearCurrentPiece(game);
+      fillActivePiece(game);
+    }
+    break;
+  case INPUT_DOWN:
     if (doesPieceFit(game, currentPiece.x, currentPiece.y - 1,
                      currentPiece.rotation)) {
       game->currentPiece.y--;
 
       clearCurrentPiece(game);
+      fillActivePiece(game);
+    }
+    break;
+  case INPUT_ROTATE:
+    if (doesPieceFit(game, currentPiece.x, currentPiece.y,
+                     currentPiece.rotation + 1)) {
+      game->currentPiece.rotation++;
+
+      clearCurrentPiece(game);
+      fillActivePiece(game);
+    }
+    break;
+  default:
+    break;
+  }
+
+  game->speedCounter += dt;
+
+  if (game->speedCounter > game->forceDownInterval) {
+    game->speedCounter -= game->forceDownInterval;
+    forceDown = true;
+  }
+
+  if (forceDown) {
+    if (doesPieceFit(game, currentPiece.x, currentPiece.y - 1,
+                     currentPiece.rotation)) {
+      // Do not move if moved already
+      if (input != INPUT_DOWN) {
+        game->currentPiece.y--;
+        clearCurrentPiece(game);
+      }
     } else {
       // make active piece static
       for (int y = 0; y < FIELD_HEIGHT; y++) {
@@ -216,24 +219,22 @@ void update(struct GameState *game, double dt) {
           unsigned int fieldIndex = to1D(x, y);
           struct Tile tile = game->field[fieldIndex];
 
-          isLine &= tile.value != TILE_FREE;
+          isLine = isLine && tile.value != TILE_FREE;
         }
 
         if (isLine) {
-          game->linesToClean[linesCompleted] = y;
+          linesToClean[linesCompleted] = y;
           linesCompleted++;
         }
       }
 
       game->pieceCount++;
       if (game->pieceCount % PIECES_FOR_SPEED_INCREASE == 0 &&
-          game->speed > MAX_SPEED) {
-        game->speed -= SPEED_VARIATION;
+          game->forceDownInterval > MAX_DOWN_INTERVAL) {
+        game->forceDownInterval -= DOWN_INTERVAL_VARIATION;
       }
 
       if (linesCompleted > 0) {
-        int *linesToClean = game->linesToClean;
-
         for (int i = linesCompleted - 1; i >= 0; i--) {
           int line = linesToClean[i];
 
@@ -269,7 +270,7 @@ void update(struct GameState *game, double dt) {
     }
 
     fillActivePiece(game);
-    game->forceDown = false;
+    forceDown = false;
   }
 }
 
