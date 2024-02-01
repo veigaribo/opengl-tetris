@@ -3,9 +3,14 @@ CFLAGS=$(shell pkg-config --cflags glfw3 glew)
 LDFLAGS=$(shell pkg-config --libs glfw3 glew)
 CUSTOMCFLAGS=
 
+# To avoid having to clean when changing parameters
+# Maybe there is another way but I'm not aware
+OBJSUFFIX=
+
 # Use `DEBUG=1` in the invocation of `make` to enable
 ifdef DEBUG
 	CUSTOMCFLAGS := $(CUSTOMCFLAGS) -g -DDEBUG
+	OBJSUFFIX := $(OBJSUFFIX)-debug
 else
 	CUSTOMCFLAGS := $(CUSTOMCFLAGS) -O3
 endif
@@ -19,18 +24,20 @@ SOURCES=field.c game.c input.c main.c piece.c
 ifdef TRACK_FPS
 	CUSTOMCFLAGS := $(CUSTOMCFLAGS) -DTRACK_FPS
 	SOURCES := $(SOURCES) fps.c
+	OBJSUFFIX := $(OBJSUFFIX)-fps
 endif
 
 # Use `FAST_RENDER=1`
 ifdef FAST_RENDER
 	SOURCES := $(SOURCES) fast_render.c
+	OBJSUFFIX := $(OBJSUFFIX)-fast-render
 else
 	SOURCES := $(SOURCES) fancy_render.c
 endif
 
-OBJS=$(patsubst %.c,%.o,$(SOURCES))
+OBJS=$(patsubst %.c,%$(OBJSUFFIX).o,$(SOURCES))
 
-$(ODIR)/%.o: $(SRCDIR)/%.c
+$(ODIR)/%$(OBJSUFFIX).o: $(SRCDIR)/%.c
 	mkdir -p $(ODIR)
 	$(CC) -c -o $@ $(CFLAGS) $(CUSTOMCFLAGS) $<
 
