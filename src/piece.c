@@ -3,94 +3,84 @@
 #include "view.h"
 #include <string.h>
 
-// clang-format off
-bool pieceOMap[] = {
-  0, 0, 0, 0,
-  0, 1, 1, 0,
-  0, 1, 1, 0,
-  0, 0, 0, 0
+struct PieceTemplate PIECE_O = {
+    .type = PIECE_TEMPLATE_O,
+    // clang-format off
+    .map = {
+      0, 0, 0, 0,
+      0, 1, 1, 0,
+      0, 1, 1, 0,
+      0, 0, 0, 0
+    }
+    // clang-format on
 };
-float pieceOColor[] = {0.9f, 0.9f, 0.1f};
 
-bool pieceLMap[] = {
-  0, 0, 0, 0,
-  0, 1, 1, 0,
-  0, 0, 1, 0,
-  0, 0, 1, 0
+struct PieceTemplate PIECE_L = {
+    .type = PIECE_TEMPLATE_L,
+    // clang-format off
+    .map = {
+      0, 0, 0, 0,
+      0, 1, 1, 0,
+      0, 0, 1, 0,
+      0, 0, 1, 0
+    }
+    // clang-format on
 };
-float pieceLColor[] = {0.9f, 0.5f, 0.1f};
-
-bool pieceJMap[] = {
-  0, 0, 0, 0,
-  0, 1, 1, 0,
-  0, 1, 0, 0,
-  0, 1, 0, 0
+struct PieceTemplate PIECE_J = {
+    .type = PIECE_TEMPLATE_J,
+    // clang-format off
+    .map = {
+      0, 0, 0, 0,
+      0, 1, 1, 0,
+      0, 1, 0, 0,
+      0, 1, 0, 0
+    }
+    // clang-format on
 };
-float pieceJColor[] = {0.1f, 0.1f, 0.9f};
-
-bool pieceIMap[] = {
-  0, 0, 1, 0,
-  0, 0, 1, 0,
-  0, 0, 1, 0,
-  0, 0, 1, 0
+struct PieceTemplate PIECE_I = {
+    .type = PIECE_TEMPLATE_I,
+    // clang-format off
+    .map = {
+      0, 0, 1, 0,
+      0, 0, 1, 0,
+      0, 0, 1, 0,
+      0, 0, 1, 0
+    }
+    // clang-format on
 };
-float pieceIColor[] = {0.2f, 0.7f, 0.9f};
-
-bool pieceSMap[] = {
-  0, 1, 0, 0,
-  0, 1, 1, 0,
-  0, 0, 1, 0,
-  0, 0, 0, 0
+struct PieceTemplate PIECE_S = {
+    .type = PIECE_TEMPLATE_S,
+    // clang-format off
+    .map = {
+      0, 1, 0, 0,
+      0, 1, 1, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 0
+    }
+    // clang-format on
 };
-float pieceSColor[] = {0.2f, 0.9f, 0.2f};
-
-bool pieceZMap[] = {
-  0, 0, 1, 0,
-  0, 1, 1, 0,
-  0, 1, 0, 0,
-  0, 0, 0, 0
+struct PieceTemplate PIECE_Z = {
+    .type = PIECE_TEMPLATE_Z,
+    // clang-format off
+    .map = {
+      0, 0, 1, 0,
+      0, 1, 1, 0,
+      0, 1, 0, 0,
+      0, 0, 0, 0
+    }
+    // clang-format on
 };
-float pieceZColor[] = {0.9f, 0.1f, 0.1f};
-
-bool pieceTMap[] = {
-  0, 0, 1, 0,
-  0, 1, 1, 0,
-  0, 0, 1, 0,
-  0, 0, 0, 0
+struct PieceTemplate PIECE_T = {
+    .type = PIECE_TEMPLATE_T,
+    // clang-format off
+    .map = {
+      0, 0, 1, 0,
+      0, 1, 1, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 0
+    }
+    // clang-format on
 };
-float pieceTColor[] = {0.8f, 0.1f, 0.8f};
-// clang-format on
-
-struct PieceTemplate PIECE_O;
-struct PieceTemplate PIECE_L;
-struct PieceTemplate PIECE_J;
-struct PieceTemplate PIECE_I;
-struct PieceTemplate PIECE_S;
-struct PieceTemplate PIECE_Z;
-struct PieceTemplate PIECE_T;
-
-void initPieces() {
-  memcpy(&PIECE_O.map, pieceOMap, sizeof(bool) * 4 * 4);
-  memcpy(&PIECE_O.color, pieceOColor, sizeof(float) * 3);
-
-  memcpy(&PIECE_L.map, pieceLMap, sizeof(bool) * 4 * 4);
-  memcpy(&PIECE_L.color, pieceLColor, sizeof(float) * 3);
-
-  memcpy(&PIECE_J.map, pieceJMap, sizeof(bool) * 4 * 4);
-  memcpy(&PIECE_J.color, pieceJColor, sizeof(float) * 3);
-
-  memcpy(&PIECE_I.map, pieceIMap, sizeof(bool) * 4 * 4);
-  memcpy(&PIECE_I.color, pieceIColor, sizeof(float) * 3);
-
-  memcpy(&PIECE_S.map, pieceSMap, sizeof(bool) * 4 * 4);
-  memcpy(&PIECE_S.color, pieceSColor, sizeof(float) * 3);
-
-  memcpy(&PIECE_Z.map, pieceZMap, sizeof(bool) * 4 * 4);
-  memcpy(&PIECE_Z.color, pieceZColor, sizeof(float) * 3);
-
-  memcpy(&PIECE_T.map, pieceTMap, sizeof(bool) * 4 * 4);
-  memcpy(&PIECE_T.color, pieceTColor, sizeof(float) * 3);
-}
 
 // y, x, 1
 int rotationCoefficients[4][3] = {

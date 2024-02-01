@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct PieceTemplate pieceTemplates[7];
+struct PieceTemplate *pieceTemplates[7];
 
 static inline void fillWalls(struct GameState *game) {
   struct Tile *field = game->field;
@@ -21,36 +21,27 @@ static inline void fillWalls(struct GameState *game) {
       bool isBottomWall = y == 0;
 
       if (isLeftWall || isRightWall || isBottomWall) {
-        struct Tile tile;
-        tile.type = TILE_WALL;
-        tile.color[0] = WALL_COLOR;
-        tile.color[1] = WALL_COLOR;
-        tile.color[2] = WALL_COLOR;
-
-        field[fieldIndex] = tile;
+        field[fieldIndex].value = TILE_WALL;
       };
     }
   }
 }
 
 static inline void fillActivePiece(struct GameState *game) {
-  struct ActivePiece piece = game->currentPiece;
+  struct ActivePiece *piece = &game->currentPiece;
   struct Tile *field = game->field;
 
   for (int py = 0; py < 4; py++) {
     for (int px = 0; px < 4; px++) {
-      unsigned int pieceIndex = rotatedIndex(px, py, piece.rotation);
+      unsigned int pieceIndex = rotatedIndex(px, py, piece->rotation);
 
-      bool containsPiece = piece.pieceTemplate.map[pieceIndex];
+      bool containsPiece = piece->pieceTemplate->map[pieceIndex];
 
       if (containsPiece) {
-        unsigned int fieldIndex = to1D(piece.x + px, piece.y - py);
+        unsigned int fieldIndex = to1D(piece->x + px, piece->y - py);
+        unsigned int pieceType = piece->pieceTemplate->type;
 
-        struct Tile tile;
-        tile.type = TILE_OCCUPIED_BY_ACTIVE;
-        memcpy(tile.color, piece.pieceTemplate.color, sizeof(float) * 3);
-
-        field[fieldIndex] = tile;
+        field[fieldIndex].value = TILE_OCCUPIED_BY_ACTIVE | pieceType;
       };
     }
   }
@@ -64,8 +55,8 @@ static inline void clearCurrentPiece(struct GameState *game) {
       unsigned int fieldIndex = to1D(x, y);
       struct Tile tile = field[fieldIndex];
 
-      if (tile.type == TILE_OCCUPIED_BY_ACTIVE) {
-        field[fieldIndex].type = TILE_FREE;
+      if (IS_OCCUPIED_BY_ACTIVE(tile.value)) {
+        field[fieldIndex].value = TILE_FREE;
       }
     }
   }
@@ -83,12 +74,12 @@ static inline bool doesPieceFit(struct GameState *game, unsigned int px,
 
       if (px + x >= 0 && px + x < FIELD_WIDTH)
         if (py - y >= 0 && py - y < FIELD_HEIGHT) {
-          bool containsPiece = piece->pieceTemplate.map[pieceIndex];
+          bool containsPiece = piece->pieceTemplate->map[pieceIndex];
 
-          enum TileType tileType = field[fieldIndex].type;
+          unsigned int tile = field[fieldIndex].value;
 
-          if (containsPiece && tileType != TILE_FREE &&
-              tileType != TILE_OCCUPIED_BY_ACTIVE) {
+          if (containsPiece && tile != TILE_FREE &&
+              !IS_OCCUPIED_BY_ACTIVE(tile)) {
             return false;
           }
         }
@@ -98,53 +89,43 @@ static inline bool doesPieceFit(struct GameState *game, unsigned int px,
   return true;
 }
 
-static inline struct ActivePiece newPiece() {
-  struct ActivePiece piece;
-  piece.x = FIELD_WIDTH / 2;
-  piece.y = FIELD_HEIGHT - 1;
-  piece.rotation = 0;
+static inline void newPiece(struct GameState *game) {
+  game->currentPiece.x = FIELD_WIDTH / 2;
+  game->currentPiece.y = FIELD_HEIGHT - 1;
+  game->currentPiece.rotation = 0;
 
   unsigned int random = rand() % 7;
-  piece.pieceTemplate = pieceTemplates[random];
-
-  return piece;
+  game->currentPiece.pieceTemplate = pieceTemplates[random];
 }
 
-struct GameState *start(GLFWwindow *window) {
-  struct PieceTemplate pieceTemplatesTmp[] = {
-      PIECE_O, PIECE_L, PIECE_J, PIECE_I, PIECE_S, PIECE_Z, PIECE_T};
-  memcpy(pieceTemplates, pieceTemplatesTmp, sizeof(struct PieceTemplate) * 7);
+void start(GLFWwindow *window, struct GameState *game) {
+  pieceTemplates[0] = &PIECE_O;
+  pieceTemplates[1] = &PIECE_L;
+  pieceTemplates[2] = &PIECE_J;
+  pieceTemplates[3] = &PIECE_I;
+  pieceTemplates[4] = &PIECE_S;
+  pieceTemplates[5] = &PIECE_Z;
+  pieceTemplates[6] = &PIECE_T;
 
-  unsigned int FIELD_SIZE = sizeof(struct Tile[FIELD_WIDTH * FIELD_HEIGHT]);
+  newPiece(game);
+  game->window = window;
+  game->gameOver = false;
+  game->pieceCount = 0;
+  game->speed = INITIAL_SPEED;
+  game->speedCounter = 0;
+  game->forceDown = false;
+  game->score = 0;
+  game->linesToClean[0] = -1;
+  game->linesToClean[1] = -1;
+  game->linesToClean[2] = -1;
+  game->linesToClean[3] = -1;
 
-  struct Tile field[FIELD_WIDTH * FIELD_HEIGHT];
   for (int i = 0; i < FIELD_WIDTH * FIELD_HEIGHT; i++) {
-    struct Tile tile;
-    tile.type = TILE_FREE;
-
-    field[i] = tile;
+    game->field[i].value = TILE_FREE;
   }
 
-  struct ActivePiece initialPiece = newPiece();
-  int linesToClean[4] = {-1, -1, -1, -1};
-
-  struct GameState *gameState = calloc(1, sizeof(struct GameState));
-  gameState->window = window;
-  gameState->gameOver = false;
-  gameState->currentPiece = initialPiece; // copy by value
-  gameState->pieceCount = 0;
-  gameState->speed = INITIAL_SPEED;
-  gameState->speedCounter = 0;
-  gameState->forceDown = false;
-  gameState->score = 0;
-
-  memcpy(&gameState->linesToClean, linesToClean, sizeof(int[4]));
-  memcpy(&gameState->field, field, FIELD_SIZE);
-
-  fillWalls(gameState);
-  fillActivePiece(gameState);
-
-  return gameState;
+  fillWalls(game);
+  fillActivePiece(game);
 }
 
 void update(struct GameState *game, double dt) {
@@ -218,8 +199,8 @@ void update(struct GameState *game, double dt) {
           unsigned int fieldIndex = to1D(x, y);
           struct Tile tile = game->field[fieldIndex];
 
-          if (tile.type == TILE_OCCUPIED_BY_ACTIVE) {
-            game->field[fieldIndex].type = TILE_OCCUPIED_BY_STATIC;
+          if (IS_OCCUPIED_BY_ACTIVE(tile.value)) {
+            game->field[fieldIndex].value = TO_STATIC(tile.value);
           }
         }
       }
@@ -235,7 +216,7 @@ void update(struct GameState *game, double dt) {
           unsigned int fieldIndex = to1D(x, y);
           struct Tile tile = game->field[fieldIndex];
 
-          isLine &= tile.type != TILE_FREE;
+          isLine &= tile.value != TILE_FREE;
         }
 
         if (isLine) {
@@ -276,9 +257,7 @@ void update(struct GameState *game, double dt) {
 
       printf("Score: %d\n", game->score);
 
-      struct ActivePiece piece = newPiece();
-
-      game->currentPiece = piece;
+      newPiece(game);
 
       // if the piece has just spawned and does not fit, game over
       if (!doesPieceFit(game, game->currentPiece.x, game->currentPiece.y,
@@ -294,4 +273,4 @@ void update(struct GameState *game, double dt) {
   }
 }
 
-void end(struct GameState *game) { free(game); }
+void end(struct GameState *game) {}

@@ -32,7 +32,7 @@ struct GameState {
   int linesToClean[4];
 };
 
-struct GameState *start(GLFWwindow *window);
+void start(GLFWwindow *window, struct GameState *game);
 void update(struct GameState *game, double dt);
 void end(struct GameState *game);
 

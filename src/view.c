@@ -4,6 +4,7 @@
 
 #include "view.h"
 #include "field.h"
+#include "game.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,12 +15,7 @@ struct RenderInfo {
   GLuint vertexBufferId;
   GLuint vertexArrayId;
   GLuint indexBufferId;
-
-  GLuint uOffsetLocation;
-  GLuint uColorLocation;
 } renderInfo;
-
-const unsigned int QUAD_VERTEX_INDICES[] = {0, 1, 2, 2, 3, 0};
 
 void APIENTRY handleGlDebugMessage(GLenum source, GLenum type, GLuint id,
                                    GLenum severity, GLsizei length,
@@ -34,7 +30,16 @@ void APIENTRY handleGlDebugMessage(GLenum source, GLenum type, GLuint id,
          source, type, id, severity, ntMessage);
 }
 
-void renderInit() {
+enum { FIELD_SIZE = FIELD_WIDTH * FIELD_HEIGHT };
+
+// 1 quad for every tile
+struct Vertex vertexBuffer[FIELD_SIZE * 4];
+
+// A lot
+// In practice will certainly use less
+unsigned int indexBuffer[FIELD_SIZE * 6] = {0};
+
+void fancyRenderInit() {
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
@@ -47,38 +52,69 @@ void renderInit() {
   printf("Renderer: %s\n", renderer);
   printf("OpenGL version supported %s\n", version);
 
-  float blockWidth = 1.0f / (FIELD_WIDTH * 2.0f);
-  float blockHeight = 1.0f / (FIELD_HEIGHT * 2.0f);
-
-  // clang-format off
-  struct Vertex vertexBuffer[] = {
-    -blockWidth, -blockHeight,
-    blockWidth, -blockHeight,
-    blockWidth, blockHeight,
-    -blockWidth, blockHeight
-  };
-  // clang-format on
-
   GLuint vertexArrayId;
   glGenVertexArrays(1, &vertexArrayId);
   glBindVertexArray(vertexArrayId);
   renderInfo.vertexArrayId = vertexArrayId;
 
+  // Assumes height will be bigger than width
+  // float horizontalProportion = (float)FIELD_WIDTH / FIELD_HEIGHT;
+  // float horizontalOffset = 0;
+
+  // 0 - 1
+  float blockHeight = 1.0 / FIELD_HEIGHT;
+  float blockWidth = 1.0 / FIELD_WIDTH;
+
+  // -1 - +1
+  float scaledBlockHeight = blockHeight * 2;
+  float scaledBlockWidth = blockWidth * 2;
+
+  // Insert 1 quad for every tile
+  for (unsigned int x = 0; x < FIELD_WIDTH; ++x) {
+    for (unsigned int y = 0; y < FIELD_HEIGHT; ++y) {
+      float quadX = x * scaledBlockWidth - 1;
+      float quadY = y * scaledBlockHeight - 1;
+
+      unsigned int vertexI = to1D(x, y) * 4;
+
+      // Bottom left
+      vertexBuffer[vertexI].x = quadX;
+      vertexBuffer[vertexI].y = quadY;
+
+      // Bottom right
+      vertexBuffer[vertexI + 1].x = quadX + scaledBlockWidth;
+      vertexBuffer[vertexI + 1].y = quadY;
+
+      // Top right
+      vertexBuffer[vertexI + 2].x = quadX + scaledBlockWidth;
+      vertexBuffer[vertexI + 2].y = quadY + scaledBlockHeight;
+
+      // Top left
+      vertexBuffer[vertexI + 3].x = quadX;
+      vertexBuffer[vertexI + 3].y = quadY + scaledBlockHeight;
+    }
+  }
+
   GLuint vertexBufferId;
   glGenBuffers(1, &vertexBufferId);
   glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
-  glBufferData(GL_ARRAY_BUFFER, 4 * sizeof(struct Vertex), vertexBuffer,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof vertexBuffer, vertexBuffer,
+               GL_DYNAMIC_DRAW);
   renderInfo.vertexBufferId = vertexBufferId;
 
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (const void *)0);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(struct Vertex),
+                        (const void *)0);
+
+  glEnableVertexAttribArray(1);
+  glVertexAttribIPointer(1, 1, GL_UNSIGNED_BYTE, sizeof(struct Vertex),
+                         (const void *)offsetof(struct Vertex, color));
 
   GLuint indexBufferId;
   glGenBuffers(1, &indexBufferId);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int),
-               QUAD_VERTEX_INDICES, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indexBuffer, indexBuffer,
+               GL_DYNAMIC_DRAW);
   renderInfo.indexBufferId = indexBufferId;
 
   GLuint programId = glCreateProgram();
@@ -140,36 +176,59 @@ void renderInit() {
 
   glLinkProgram(programId);
   glValidateProgram(programId);
-  glUseProgram(programId);
 
-  GLint uOffsetLocation = glGetUniformLocation(programId, "u_Offset");
-  renderInfo.uOffsetLocation = uOffsetLocation;
-  GLint uColorLocation = glGetUniformLocation(programId, "u_Color");
-  renderInfo.uColorLocation = uColorLocation;
+  glUseProgram(programId);
 }
 
-void render(struct GameState *game) {
+void fancyRender(struct GameState *game) {
   glClear(GL_COLOR_BUFFER_BIT);
+
+  size_t indexBufferIndex = 0;
+  size_t vertexCount = 0;
 
   for (int y = 0; y < FIELD_HEIGHT; y++) {
     for (int x = 0; x < FIELD_WIDTH; x++) {
       unsigned int fieldPosition = to1D(x, y);
       struct Tile tile = game->field[fieldPosition];
 
-      enum TileType tileType = tile.type;
-      float *color = tile.color;
+      unsigned int tileValue = tile.value;
 
-      float offsetX = (float)x / FIELD_WIDTH - 0.5f;
-      float offsetY = (float)y / FIELD_HEIGHT - 0.5f;
-
-      // not TILE_FREE
-      if (tileType) {
-        glUniform2f(renderInfo.uOffsetLocation, offsetX, offsetY);
-        glUniform3f(renderInfo.uColorLocation, color[0], color[1], color[2]);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
+      if (tileValue == 0) {
+        continue;
       }
+
+      unsigned char colorIndex;
+
+      if (IS_OCCUPIED_BY_ACTIVE(tileValue) ||
+          IS_OCCUPIED_BY_STATIC(tileValue)) {
+        unsigned int pieceType = GET_PIECE_TYPE(tileValue);
+        colorIndex = (pieceType >> 2) + 1;
+      } else {
+        colorIndex = 1;
+      }
+
+      size_t vertexIndex = fieldPosition * 4;
+      struct Vertex *quad = &vertexBuffer[vertexIndex];
+
+      quad[0].color = colorIndex;
+      quad[1].color = colorIndex;
+      quad[2].color = colorIndex;
+      quad[3].color = colorIndex;
+
+      indexBuffer[indexBufferIndex++] = vertexIndex + 0;
+      indexBuffer[indexBufferIndex++] = vertexIndex + 1;
+      indexBuffer[indexBufferIndex++] = vertexIndex + 2;
+      indexBuffer[indexBufferIndex++] = vertexIndex + 2;
+      indexBuffer[indexBufferIndex++] = vertexIndex + 3;
+      indexBuffer[indexBufferIndex++] = vertexIndex + 0;
+
+      vertexCount += 6;
     }
   }
+
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof vertexBuffer, vertexBuffer);
+  glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof indexBuffer, indexBuffer);
+  glDrawElements(GL_TRIANGLES, vertexCount, GL_UNSIGNED_INT, NULL);
 }
 
 void terminateRender() {

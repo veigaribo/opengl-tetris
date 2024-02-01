@@ -48,9 +48,9 @@ int main() {
   // init rng
   srand(time(0));
 
-  initPieces();
-  struct GameState *game = start(window);
-  renderInit();
+  struct GameState game;
+  start(window, &game);
+  fancyRenderInit();
 
   // used to measure dt
   double startTime, endTime;
@@ -68,9 +68,9 @@ int main() {
 
     dt = endTime - startTime;
 
-    update(game, dt);
+    update(&game, dt);
 
-    render(game);
+    fancyRender(&game);
 
     startTime = glfwGetTime();
 
@@ -87,7 +87,7 @@ int main() {
     glfwPollEvents();
   }
 
-  end(game);
+  end(&game);
   terminateRender();
   glfwTerminate();
 

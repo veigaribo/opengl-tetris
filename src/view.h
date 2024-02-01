@@ -7,10 +7,13 @@ struct Vertex {
   // position
   float x;
   float y;
+
+  // index into the COLORS array
+  unsigned char color;
 };
 
-void renderInit();
-void render(struct GameState *game);
+void fancyRenderInit();
+void fancyRender(struct GameState *game);
 void terminateRender();
 
 #endif /* VIEW_H */
