@@ -49,12 +49,14 @@ struct Vertex vertexBuffer[FIELD_SIZE * 4];
 unsigned int indexBuffer[FIELD_SIZE * 6] = {0};
 
 void renderInit() {
+#ifdef DEBUG
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
   glDebugMessageCallback(&handleGlDebugMessage, NULL);
   glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL,
                         GL_TRUE);
+#endif
 
   const GLubyte *renderer = glGetString(GL_RENDERER); // get renderer string
   const GLubyte *version = glGetString(GL_VERSION);   // version as a string

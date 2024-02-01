@@ -41,7 +41,7 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-#ifndef TRACK_FPS
+#ifdef DEBUG
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
@@ -74,41 +74,51 @@ int main() {
   renderInit();
 
   // used to measure dt
-  double startTime, endTime;
-  startTime = glfwGetTime();
+  double updateStartTime, updateEndTime;
+  updateStartTime = glfwGetTime();
 
   float dt;
 
 #ifdef TRACK_FPS
   float fps = 0;
+
+  // used to measure fps
+  double fpsStartTime, fpsEndTime;
 #endif
 
   /* Loop until the user closes the window */
   while (!glfwWindowShouldClose(window)) {
-    endTime = glfwGetTime();
+    updateEndTime = glfwGetTime();
 
-    dt = endTime - startTime;
+#ifdef TRACK_FPS
+    fpsStartTime = updateEndTime;
+#endif
+
+    dt = updateEndTime - updateStartTime;
 
     updateInc(dt);
     while (shouldUpdate(dt)) {
       update(&game, UPDATE_INTERVAL);
     }
 
+    updateStartTime = glfwGetTime();
+
     render(&game);
-
-    startTime = glfwGetTime();
-
-#ifdef TRACK_FPS
-    if (trackFps(&fps, dt)) {
-      printf("FPS: %02.0f\n", fps);
-    }
-#endif
 
     /* Swap front and back buffers */
     glfwSwapBuffers(window);
 
     /* Poll for and process events */
     glfwPollEvents();
+
+#ifdef TRACK_FPS
+    fpsEndTime = glfwGetTime();
+    dt = fpsEndTime - fpsStartTime;
+
+    if (trackFps(&fps, dt)) {
+      printf("FPS: %02.0f\n", fps);
+    }
+#endif
   }
 
   end(&game);
