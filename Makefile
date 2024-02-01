@@ -3,13 +3,6 @@ CFLAGS=$(shell pkg-config --cflags glfw3 glew)
 LDFLAGS=$(shell pkg-config --libs glfw3 glew)
 CUSTOMCFLAGS=
 
-# Use `TRACK_FPS=1` in the invocation of `make` to enable
-ifdef TRACK_FPS
-	TRACK_FPS_FLAGS=-DTRACK_FPS
-else
-	TRACK_FPS_FLAGS=
-endif
-
 # Use `DEBUG=1` in the invocation of `make` to enable
 ifdef DEBUG
 	CUSTOMCFLAGS := $(CUSTOMCFLAGS) -g
@@ -20,7 +13,23 @@ endif
 SRCDIR=src
 ODIR=obj
 
-SOURCES=$(notdir $(wildcard $(SRCDIR)/*.c))
+SOURCES=field.c game.c input.c main.c piece.c
+
+# Use `TRACK_FPS=1`
+ifdef TRACK_FPS
+	TRACK_FPS_FLAGS=-DTRACK_FPS
+	SOURCES := $(SOURCES) fps.c
+else
+	TRACK_FPS_FLAGS=
+endif
+
+# Use `FAST_RENDER=1`
+ifdef FAST_RENDER
+	SOURCES := $(SOURCES) fast_render.c
+else
+	SOURCES := $(SOURCES) fancy_render.c
+endif
+
 OBJS=$(patsubst %.c,%.o,$(SOURCES))
 
 $(ODIR)/%.o: $(SRCDIR)/%.c

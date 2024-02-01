@@ -1,6 +1,5 @@
 #include "piece.h"
 #include "common.h"
-#include "view.h"
 #include <string.h>
 
 struct PieceTemplate PIECE_O = {

@@ -2,9 +2,9 @@
 #include "GL/glew.h"
 // clang-format on
 
-#include "view.h"
 #include "field.h"
 #include "game.h"
+#include "render.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +30,15 @@ void APIENTRY handleGlDebugMessage(GLenum source, GLenum type, GLuint id,
          source, type, id, severity, ntMessage);
 }
 
+struct Vertex {
+  // position
+  float x;
+  float y;
+
+  // index into the COLORS array
+  unsigned char color;
+};
+
 enum { FIELD_SIZE = FIELD_WIDTH * FIELD_HEIGHT };
 
 // 1 quad for every tile
@@ -39,7 +48,7 @@ struct Vertex vertexBuffer[FIELD_SIZE * 4];
 // In practice will certainly use less
 unsigned int indexBuffer[FIELD_SIZE * 6] = {0};
 
-void fancyRenderInit() {
+void renderInit() {
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
@@ -120,7 +129,7 @@ void fancyRenderInit() {
   GLuint programId = glCreateProgram();
   renderInfo.programId = programId;
 
-  char *vertexShaderPath = "res/shaders/vertex.glsl";
+  char *vertexShaderPath = "res/shaders/fancy_vertex.glsl";
   FILE *vertexShaderFile = fopen(vertexShaderPath, "r");
 
   fseek(vertexShaderFile, 0, SEEK_END);
@@ -147,7 +156,7 @@ void fancyRenderInit() {
   glAttachShader(programId, vertexShaderId);
   glDeleteShader(vertexShaderId);
 
-  char *fragShaderPath = "res/shaders/frag.glsl";
+  char *fragShaderPath = "res/shaders/fancy_frag.glsl";
   FILE *fragShaderFile = fopen(fragShaderPath, "r");
 
   fseek(fragShaderFile, 0, SEEK_END);
@@ -180,7 +189,7 @@ void fancyRenderInit() {
   glUseProgram(programId);
 }
 
-void fancyRender(struct GameState *game) {
+void render(struct GameState *game) {
   glClear(GL_COLOR_BUFFER_BIT);
 
   size_t indexBufferIndex = 0;

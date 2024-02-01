@@ -6,8 +6,8 @@
 #include "game.h"
 #include "input.h"
 #include "piece.h"
+#include "render.h"
 #include "stdio.h"
-#include "view.h"
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include <time.h>
@@ -71,7 +71,7 @@ int main() {
 
   struct GameState game;
   start(window, &game);
-  fancyRenderInit();
+  renderInit();
 
   // used to measure dt
   double startTime, endTime;
@@ -94,7 +94,7 @@ int main() {
       update(&game, UPDATE_INTERVAL);
     }
 
-    fancyRender(&game);
+    render(&game);
 
     startTime = glfwGetTime();
 
