@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 // clang-format on
 
+#include "config.h"
 #include "game.h"
 #include "input.h"
 #include "piece.h"
@@ -14,6 +15,20 @@
 #ifdef TRACK_FPS
 #include "fps.h"
 #endif
+
+const float UPDATE_INTERVAL = 1.0 / UPDATE_FREQUENCY;
+static float updateElapsed = 0; // Time since the last update
+
+void updateInc(float dt) { updateElapsed += dt; }
+
+bool shouldUpdate(float dt) {
+  if (updateElapsed >= UPDATE_INTERVAL) {
+    updateElapsed -= UPDATE_INTERVAL;
+    return true;
+  }
+
+  return false;
+}
 
 int main() {
   GLFWwindow *window;
@@ -74,7 +89,10 @@ int main() {
 
     dt = endTime - startTime;
 
-    update(&game, dt);
+    updateInc(dt);
+    while (shouldUpdate(dt)) {
+      update(&game, UPDATE_INTERVAL);
+    }
 
     fancyRender(&game);
 

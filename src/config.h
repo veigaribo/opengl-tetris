@@ -1,6 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+// Times per second
+#define UPDATE_FREQUENCY 60
+
 #define INITIAL_DOWN_INTERVAL 1.0f
 #define PIECES_FOR_SPEED_INCREASE 10
 #define DOWN_INTERVAL_VARIATION 0.05f
