@@ -17,10 +17,8 @@ SOURCES=field.c game.c input.c main.c piece.c
 
 # Use `TRACK_FPS=1`
 ifdef TRACK_FPS
-	TRACK_FPS_FLAGS=-DTRACK_FPS
+	CUSTOMCFLAGS := $(CUSTOMCFLAGS) -DTRACK_FPS
 	SOURCES := $(SOURCES) fps.c
-else
-	TRACK_FPS_FLAGS=
 endif
 
 # Use `FAST_RENDER=1`
@@ -34,7 +32,7 @@ OBJS=$(patsubst %.c,%.o,$(SOURCES))
 
 $(ODIR)/%.o: $(SRCDIR)/%.c
 	mkdir -p $(ODIR)
-	$(CC) -c -o $@ $(CFLAGS) $(CUSTOMCFLAGS) $(TRACK_FPS_FLAGS) $<
+	$(CC) -c -o $@ $(CFLAGS) $(CUSTOMCFLAGS) $<
 
 tetris: $(addprefix $(ODIR)/,$(OBJS))
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
