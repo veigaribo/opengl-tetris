@@ -82,7 +82,7 @@ void renderInit() {
   glGenBuffers(1, &vertexBufferId);
   glBindBuffer(GL_ARRAY_BUFFER, vertexBufferId);
   glBufferData(GL_ARRAY_BUFFER, sizeof vertexBuffer, vertexBuffer,
-               GL_DYNAMIC_DRAW);
+               GL_STATIC_DRAW);
   renderInfo.vertexBufferId = vertexBufferId;
 
   glEnableVertexAttribArray(0);
@@ -97,7 +97,7 @@ void renderInit() {
   glGenBuffers(1, &indexBufferId);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof indexBuffer, indexBuffer,
-               GL_DYNAMIC_DRAW);
+               GL_STATIC_DRAW);
   renderInfo.indexBufferId = indexBufferId;
 
   GLuint gameTextureId;
