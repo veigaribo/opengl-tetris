@@ -7,7 +7,7 @@
 | A / H / ← | Move current piece to the left  |
 | S / J / ↓ | Move current piece down         |
 | D / L / → | Move current piece to the right |
-| Z         | Rotate current piece clockwise  |
+| Z / ␣     | Rotate current piece clockwise  |
 
 ## Building
 
