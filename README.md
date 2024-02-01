@@ -30,7 +30,7 @@ To build, you will need the following C/C++ libraries and headers available:
 
 ### Arch Linux:
 
-For wayland:
+For Wayland:
 
 ```shell
 # pacman -S glfw-wayland glew
