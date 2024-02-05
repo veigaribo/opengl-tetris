@@ -5,7 +5,6 @@
 #include "field.h"
 #include "game.h"
 #include "render.h"
-#include <GL/gl.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,13 +48,13 @@ struct Vertex vertexBuffer[] = {{.x = -1, .y = -1, .texX = 0, .texY = 0},
                                 {.x = 1, .y = 1, .texX = 1, .texY = 1},
                                 {.x = -1, .y = 1, .texX = 0, .texY = 1}};
 
-unsigned int indexBuffer[] = {0, 1, 2, 2, 3, 0};
+uint32_t indexBuffer[] = {0, 1, 2, 2, 3, 0};
 
 struct Texel {
-  unsigned char red;
-  unsigned char green;
-  unsigned char blue;
-  unsigned char alpha;
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+  uint8_t alpha;
 };
 
 struct Texel gameTextureImage[FIELD_WIDTH * FIELD_HEIGHT];
@@ -103,7 +102,7 @@ void renderInit() {
   renderInfo.indexBufferId = indexBufferId;
 
   GLuint gameTextureId;
-  unsigned int textureUnit = 0;
+  uint32_t textureUnit = 0;
 
   glActiveTexture(GL_TEXTURE0 + textureUnit);
   glGenTextures(1, &gameTextureId);
@@ -123,7 +122,7 @@ void renderInit() {
   FILE *vertexShaderFile = fopen(vertexShaderPath, "r");
 
   fseek(vertexShaderFile, 0, SEEK_END);
-  long vertexShaderLength = ftell(vertexShaderFile);
+  uint64_t vertexShaderLength = ftell(vertexShaderFile);
   fseek(vertexShaderFile, 0, SEEK_SET);
 
   // + 1 for null at the end
@@ -136,7 +135,7 @@ void renderInit() {
   fclose(vertexShaderFile);
   const char *const vertexShader = vertexShader1;
 
-  unsigned int vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+  GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
 
   glShaderSource(vertexShaderId, 1, &vertexShader, NULL);
   glCompileShader(vertexShaderId);
@@ -150,7 +149,7 @@ void renderInit() {
   FILE *fragShaderFile = fopen(fragShaderPath, "r");
 
   fseek(fragShaderFile, 0, SEEK_END);
-  long fragShaderLength = ftell(fragShaderFile);
+  uint64_t fragShaderLength = ftell(fragShaderFile);
   fseek(fragShaderFile, 0, SEEK_SET);
 
   // + 1 for null at the end
@@ -163,7 +162,7 @@ void renderInit() {
   fclose(fragShaderFile);
   const char *const fragShader = fragShader1;
 
-  unsigned int fragShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+  GLuint fragShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 
   glShaderSource(fragShaderId, 1, &fragShader, NULL);
   glCompileShader(fragShaderId);
@@ -183,9 +182,9 @@ void renderInit() {
   renderInfo.gameTextureLoc = gameTextureLoc;
 
   // Fill wall color just once since it never changes
-  for (int y = 0; y < FIELD_HEIGHT; y++) {
-    for (int x = 0; x < FIELD_WIDTH; x++) {
-      unsigned int fieldIndex = to1D(x, y);
+  for (uint8_t y = 0; y < FIELD_HEIGHT; y++) {
+    for (uint8_t x = 0; x < FIELD_WIDTH; x++) {
+      uint8_t fieldIndex = to1D(x, y);
 
       bool isLeftWall = x == 0;
       bool isRightWall = x == FIELD_WIDTH - 1;
@@ -209,17 +208,17 @@ void renderInit() {
 
 void render(struct GameState *game) {
   // Don't even check the walls
-  for (size_t y = 1; y < FIELD_HEIGHT; ++y) {
-    for (size_t x = 1; x < FIELD_WIDTH - 1; ++x) {
-      size_t i = to1D(x, y);
+  for (uint8_t y = 1; y < FIELD_HEIGHT; ++y) {
+    for (uint8_t x = 1; x < FIELD_WIDTH - 1; ++x) {
+      uint8_t i = to1D(x, y);
 
       struct Tile *tile = &game->field[i];
-      unsigned int value = tile->value;
+      uint8_t value = tile->value;
 
       if (value == TILE_FREE) {
         COLOR(0, 0, 0);
       } else {
-        unsigned int piece = GET_PIECE_TYPE(value);
+        uint8_t piece = GET_PIECE_TYPE(value);
 
         switch (piece) {
         case PIECE_TEMPLATE_O:

@@ -14,14 +14,14 @@ enum {
 };
 
 struct PieceTemplate {
-  unsigned int type;
-  unsigned char map[4 * 4];
+  uint8_t type;
+  uint8_t map[4 * 4];
 };
 
 struct ActivePiece {
-  unsigned int x;
-  unsigned int y;
-  unsigned int rotation;
+  uint8_t x;
+  uint8_t y;
+  uint8_t rotation;
 
   struct PieceTemplate *pieceTemplate;
 };
@@ -35,6 +35,6 @@ extern struct PieceTemplate PIECE_Z;
 extern struct PieceTemplate PIECE_T;
 
 // https://youtu.be/8OK8_tHeCIA?t=209
-unsigned int rotatedIndex(unsigned int px, unsigned int py, unsigned int r);
+uint8_t rotatedIndex(uint8_t px, uint8_t py, uint8_t r);
 
 #endif /* PIECE_H */

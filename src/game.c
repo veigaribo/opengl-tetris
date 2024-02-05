@@ -13,9 +13,9 @@ struct PieceTemplate *pieceTemplates[7];
 static inline void fillWalls(struct GameState *game) {
   struct Tile *field = game->field;
 
-  for (int y = 0; y < FIELD_HEIGHT; y++) {
-    for (int x = 0; x < FIELD_WIDTH; x++) {
-      unsigned int fieldIndex = to1D(x, y);
+  for (uint8_t y = 0; y < FIELD_HEIGHT; y++) {
+    for (uint8_t x = 0; x < FIELD_WIDTH; x++) {
+      uint8_t fieldIndex = to1D(x, y);
 
       bool isLeftWall = x == 0;
       bool isRightWall = x == FIELD_WIDTH - 1;
@@ -32,15 +32,14 @@ static inline void fillActivePiece(struct GameState *game) {
   struct ActivePiece *piece = &game->currentPiece;
   struct Tile *field = game->field;
 
-  for (int py = 0; py < 4; py++) {
-    for (int px = 0; px < 4; px++) {
-      unsigned int pieceIndex = rotatedIndex(px, py, piece->rotation);
-
+  for (uint8_t py = 0; py < 4; py++) {
+    for (uint8_t px = 0; px < 4; px++) {
+      uint8_t pieceIndex = rotatedIndex(px, py, piece->rotation);
       bool containsPiece = piece->pieceTemplate->map[pieceIndex];
 
       if (containsPiece) {
-        unsigned int fieldIndex = to1D(piece->x + px, piece->y - py);
-        unsigned int pieceType = piece->pieceTemplate->type;
+        uint8_t fieldIndex = to1D(piece->x + px, piece->y + py);
+        uint8_t pieceType = piece->pieceTemplate->type;
 
         field[fieldIndex].value = TILE_OCCUPIED_BY_ACTIVE | pieceType;
       };
@@ -51,9 +50,9 @@ static inline void fillActivePiece(struct GameState *game) {
 static inline void clearCurrentPiece(struct GameState *game) {
   struct Tile *field = game->field;
 
-  for (int y = 0; y < FIELD_HEIGHT; y++) {
-    for (int x = 0; x < FIELD_WIDTH; x++) {
-      unsigned int fieldIndex = to1D(x, y);
+  for (uint8_t y = 0; y < FIELD_HEIGHT; y++) {
+    for (uint8_t x = 0; x < FIELD_WIDTH; x++) {
+      uint8_t fieldIndex = to1D(x, y);
       struct Tile tile = field[fieldIndex];
 
       if (IS_OCCUPIED_BY_ACTIVE(tile.value)) {
@@ -63,27 +62,32 @@ static inline void clearCurrentPiece(struct GameState *game) {
   }
 }
 
-static inline bool doesPieceFit(struct GameState *game, unsigned int px,
-                                unsigned int py, unsigned int r) {
+static inline bool doesPieceFit(struct GameState *game, uint8_t px, uint8_t py,
+                                uint8_t r) {
   struct ActivePiece *piece = &game->currentPiece;
   struct Tile *field = game->field;
 
-  for (int y = 0; y < 4; y++) {
-    for (int x = 0; x < 4; x++) {
-      unsigned int pieceIndex = rotatedIndex(x, y, r);
-      unsigned int fieldIndex = to1D(x + px, py - y);
+  for (uint8_t y = 0; y < 4; y++) {
+    for (uint8_t x = 0; x < 4; x++) {
+      uint8_t rotated = rotatedIndex(x, y, piece->rotation);
+      uint8_t isFilled = piece->pieceTemplate->map[rotated];
 
-      if (px + x >= 0 && px + x < FIELD_WIDTH)
-        if (py - y >= 0 && py - y < FIELD_HEIGHT) {
-          bool containsPiece = piece->pieceTemplate->map[pieceIndex];
+      if (!isFilled)
+        continue;
 
-          unsigned int tile = field[fieldIndex].value;
+      uint8_t tileX = px + x;
+      uint8_t tileY = py + y;
 
-          if (containsPiece && tile != TILE_FREE &&
-              !IS_OCCUPIED_BY_ACTIVE(tile)) {
-            return false;
-          }
-        }
+      if (tileX >= FIELD_WIDTH) {
+        continue;
+      }
+
+      uint8_t fieldIndex = to1D(tileX, tileY);
+      uint8_t tile = field[fieldIndex].value;
+
+      if (tile != TILE_FREE && !IS_OCCUPIED_BY_ACTIVE(tile)) {
+        return false;
+      }
     }
   }
 
@@ -92,10 +96,10 @@ static inline bool doesPieceFit(struct GameState *game, unsigned int px,
 
 static inline void newPiece(struct GameState *game) {
   game->currentPiece.x = FIELD_WIDTH / 2;
-  game->currentPiece.y = FIELD_HEIGHT - 1;
+  game->currentPiece.y = FIELD_HEIGHT - 4 - 1;
   game->currentPiece.rotation = 0;
 
-  unsigned int random = rand() % 7;
+  uint8_t random = rand() % 7;
   game->currentPiece.pieceTemplate = pieceTemplates[random];
 }
 
@@ -116,7 +120,7 @@ void start(GLFWwindow *window, struct GameState *game) {
   game->speedCounter = 0;
   game->score = 0;
 
-  for (int i = 0; i < FIELD_WIDTH * FIELD_HEIGHT; i++) {
+  for (uint8_t i = 0; i < FIELD_WIDTH * FIELD_HEIGHT; i++) {
     game->field[i].value = TILE_FREE;
   }
 
@@ -124,7 +128,7 @@ void start(GLFWwindow *window, struct GameState *game) {
   fillActivePiece(game);
 }
 
-unsigned int linesToClean[4];
+uint8_t linesToClean[4];
 bool forceDown;
 
 void update(struct GameState *game, double dt) {
@@ -170,7 +174,7 @@ void update(struct GameState *game, double dt) {
   case INPUT_ROTATE:
     if (doesPieceFit(game, currentPiece.x, currentPiece.y,
                      currentPiece.rotation + 1)) {
-      game->currentPiece.rotation++;
+      game->currentPiece.rotation = (game->currentPiece.rotation + 1) % 4;
 
       clearCurrentPiece(game);
       fillActivePiece(game);
@@ -197,9 +201,9 @@ void update(struct GameState *game, double dt) {
       }
     } else {
       // make active piece static
-      for (int y = 0; y < FIELD_HEIGHT; y++) {
-        for (int x = 0; x < FIELD_WIDTH; x++) {
-          unsigned int fieldIndex = to1D(x, y);
+      for (uint8_t y = 0; y < FIELD_HEIGHT; y++) {
+        for (uint8_t x = 0; x < FIELD_WIDTH; x++) {
+          uint8_t fieldIndex = to1D(x, y);
           struct Tile tile = game->field[fieldIndex];
 
           if (IS_OCCUPIED_BY_ACTIVE(tile.value)) {
@@ -208,15 +212,16 @@ void update(struct GameState *game, double dt) {
         }
       }
 
-      unsigned int linesCompleted = 0;
+      size_t linesCompleted = 0;
+      uint8_t scanUntil = game->currentPiece.y + 4;
 
       // check for line completion
-      for (int y = 1; y <= game->currentPiece.y; y++) {
+      for (uint8_t y = 1; y <= scanUntil; y++) {
         bool isLine = true;
 
         // no need to check the walls
-        for (int x = 1; x < FIELD_WIDTH - 1; x++) {
-          unsigned int fieldIndex = to1D(x, y);
+        for (uint8_t x = 1; x < FIELD_WIDTH - 1; x++) {
+          uint8_t fieldIndex = to1D(x, y);
           struct Tile tile = game->field[fieldIndex];
 
           isLine = isLine && tile.value != TILE_FREE;
@@ -235,13 +240,13 @@ void update(struct GameState *game, double dt) {
       }
 
       if (linesCompleted > 0) {
-        for (int i = linesCompleted - 1; i >= 0; i--) {
-          int line = linesToClean[i];
-
-          for (int x = 1; x < FIELD_WIDTH - 1; x++) {
-            for (int y = linesToClean[i]; y < FIELD_HEIGHT - 1; y++) {
-              unsigned int fieldIndex = to1D(x, y);
-              unsigned int fieldIndexAbove = to1D(x, y + 1);
+        // `i < max` = `i >= 0`
+        for (uint8_t i = linesCompleted - 1; i < 255; i--) {
+          uint8_t line = linesToClean[i];
+          for (uint8_t x = 1; x < FIELD_WIDTH - 1; x++) {
+            for (uint8_t y = linesToClean[i]; y < FIELD_HEIGHT - 1; y++) {
+              uint8_t fieldIndex = to1D(x, y);
+              uint8_t fieldIndexAbove = to1D(x, y + 1);
 
               game->field[fieldIndex] = game->field[fieldIndexAbove];
             }

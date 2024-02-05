@@ -1,3 +1,3 @@
 #include "field.h"
 
-unsigned int to1D(int x, int y) { return y * FIELD_WIDTH + x; }
+uint8_t to1D(uint8_t x, uint8_t y) { return y * FIELD_WIDTH + x; }

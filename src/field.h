@@ -1,6 +1,7 @@
 #ifndef FIELD_H
 #define FIELD_H
 
+#include "common.h"
 #define FIELD_WIDTH 12
 #define FIELD_HEIGHT 18
 
@@ -26,9 +27,9 @@ struct Tile {
   // Either TILE_FREE or TILE_WALL
   // or one of the others bitwise ORed with a piece type
   // (see piece.h)
-  unsigned int value;
+  uint8_t value;
 };
 
-unsigned int to1D(int x, int y);
+uint8_t to1D(uint8_t x, uint8_t y);
 
 #endif /* FIELD_H */

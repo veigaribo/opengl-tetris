@@ -36,7 +36,7 @@ struct Vertex {
   float y;
 
   // index into the COLORS array
-  unsigned char color;
+  uint8_t color;
 };
 
 enum { FIELD_SIZE = FIELD_WIDTH * FIELD_HEIGHT };
@@ -46,7 +46,7 @@ struct Vertex vertexBuffer[FIELD_SIZE * 4];
 
 // A lot
 // In practice will certainly use less
-unsigned int indexBuffer[FIELD_SIZE * 6] = {0};
+uint32_t indexBuffer[FIELD_SIZE * 6] = {0};
 
 void renderInit() {
 #ifdef DEBUG
@@ -81,12 +81,12 @@ void renderInit() {
   float scaledBlockWidth = blockWidth * 2;
 
   // Insert 1 quad for every tile
-  for (unsigned int x = 0; x < FIELD_WIDTH; ++x) {
-    for (unsigned int y = 0; y < FIELD_HEIGHT; ++y) {
+  for (uint8_t x = 0; x < FIELD_WIDTH; ++x) {
+    for (uint8_t y = 0; y < FIELD_HEIGHT; ++y) {
       float quadX = x * scaledBlockWidth - 1;
       float quadY = y * scaledBlockHeight - 1;
 
-      unsigned int vertexI = to1D(x, y) * 4;
+      uint16_t vertexI = to1D(x, y) * 4;
 
       // Bottom left
       vertexBuffer[vertexI].x = quadX;
@@ -135,20 +135,19 @@ void renderInit() {
   FILE *vertexShaderFile = fopen(vertexShaderPath, "r");
 
   fseek(vertexShaderFile, 0, SEEK_END);
-  long vertexShaderLength = ftell(vertexShaderFile);
+  uint64_t vertexShaderLength = ftell(vertexShaderFile);
   fseek(vertexShaderFile, 0, SEEK_SET);
 
   // + 1 for null at the end
   // vertexShader1 is not `const`, vertexShader is
   char *const vertexShader1 = malloc(vertexShaderLength + 1);
+
   fread(vertexShader1, 1, vertexShaderLength, vertexShaderFile);
-
   vertexShader1[vertexShaderLength] = 0;
-
   fclose(vertexShaderFile);
-  const char *const vertexShader = vertexShader1;
 
-  unsigned int vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+  const char *const vertexShader = vertexShader1;
+  GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
 
   glShaderSource(vertexShaderId, 1, &vertexShader, NULL);
   glCompileShader(vertexShaderId);
@@ -162,7 +161,7 @@ void renderInit() {
   FILE *fragShaderFile = fopen(fragShaderPath, "r");
 
   fseek(fragShaderFile, 0, SEEK_END);
-  long fragShaderLength = ftell(fragShaderFile);
+  uint64_t fragShaderLength = ftell(fragShaderFile);
   fseek(fragShaderFile, 0, SEEK_SET);
 
   // + 1 for null at the end
@@ -175,7 +174,7 @@ void renderInit() {
   fclose(fragShaderFile);
   const char *const fragShader = fragShader1;
 
-  unsigned int fragShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+  GLuint fragShaderId = glCreateShader(GL_FRAGMENT_SHADER);
 
   glShaderSource(fragShaderId, 1, &fragShader, NULL);
   glCompileShader(fragShaderId);
@@ -197,22 +196,22 @@ void render(struct GameState *game) {
   size_t indexBufferIndex = 0;
   size_t vertexCount = 0;
 
-  for (int y = 0; y < FIELD_HEIGHT; y++) {
-    for (int x = 0; x < FIELD_WIDTH; x++) {
-      unsigned int fieldPosition = to1D(x, y);
+  for (uint8_t y = 0; y < FIELD_HEIGHT; y++) {
+    for (uint8_t x = 0; x < FIELD_WIDTH; x++) {
+      uint8_t fieldPosition = to1D(x, y);
       struct Tile tile = game->field[fieldPosition];
 
-      unsigned int tileValue = tile.value;
+      uint8_t tileValue = tile.value;
 
       if (tileValue == 0) {
         continue;
       }
 
-      unsigned char colorIndex;
+      uint8_t colorIndex;
 
       if (IS_OCCUPIED_BY_ACTIVE(tileValue) ||
           IS_OCCUPIED_BY_STATIC(tileValue)) {
-        unsigned int pieceType = GET_PIECE_TYPE(tileValue);
+        uint8_t pieceType = GET_PIECE_TYPE(tileValue);
         colorIndex = (pieceType >> 2) + 1;
       } else {
         colorIndex = 1;
