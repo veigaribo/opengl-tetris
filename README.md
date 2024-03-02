@@ -30,16 +30,8 @@ To build, you will need the following C/C++ libraries and headers available:
 
 ### Arch Linux:
 
-For Wayland:
-
 ```shell
-# pacman -S glfw-wayland glew
-```
-
-For XOrg:
-
-```shell
-# pacman -S glfw-x11 glew
+# pacman -S glfw glew
 ```
 
 <hr>
