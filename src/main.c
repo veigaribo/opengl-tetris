@@ -5,7 +5,6 @@
 #include "config.h"
 #include "game.h"
 #include "input.h"
-#include "piece.h"
 #include "render.h"
 #include "stdio.h"
 #include <GLFW/glfw3.h>
